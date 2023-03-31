@@ -8,7 +8,7 @@ A Fork of ryansteed/dp-policy written by: [Ryan Steed](rbsteed.com), with help f
 
 API documentation for ryansteed/dp-policy [https://github.com/ryansteed/dp-policy] : [rbsteed.com/dp-policy](https://rbsteed.com/dp-policy/)
 
-For more, check out the [paper](https://rbsteed.com/referral/dp-policy) and [SI](https://www-science-org.cmu.idm.oclc.org/doi/suppl/10.1126/science.abq4481/suppl_file/science.abq4481_sm.pdf).
+For more information about ryansteed/dp-policy , check out the [paper](https://rbsteed.com/referral/dp-policy) and [SI](https://www-science-org.cmu.idm.oclc.org/doi/suppl/10.1126/science.abq4481/suppl_file/science.abq4481_sm.pdf).
 
 ## Installation
 
