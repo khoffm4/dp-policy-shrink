@@ -30,5 +30,5 @@ Each folder will contain files:
 
 (Shrinkage Scheme)_allocations.csv represents a matrix where the entires are the estimated Title i allocations that were performed if one shrunk the population counts and allocated based on those shrunk counts. (Shrinkage Sccheme)_allocations_dp.csv is similar however it estimates the Title i allocations if one shrunk the population counts, added gaussian differnetial privacy noise and allocated based on the result. 
 
-An RMarkdown file analyzing these files can be found in notebooks/JS_Compairson.Rmd.
+An RMarkdown file analyzing these files can be found in notebooks/JS_Compairson.Rmd (Paths for data import may need modification)
 
