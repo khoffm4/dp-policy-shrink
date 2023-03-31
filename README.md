@@ -2,7 +2,7 @@
 
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-Author: Kentaro Hoffman
+Author: Kentaro Hoffman, Ruobin Gong, Yifan Cui, and Jan Hannig
 
 A Fork of ryansteed/dp-policy written by: [Ryan Steed](rbsteed.com), with help from Terrance Liu
 
