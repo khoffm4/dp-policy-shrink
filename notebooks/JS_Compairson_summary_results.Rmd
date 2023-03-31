@@ -1,0 +1,342 @@
+---
+title: "Steed et al. technical comment - summary of results"
+date: "2022-11-23"
+output: html_document
+---
+  
+# Setup
+  
+```{r setup, echo=F,warning=FALSE}
+library(tidyverse)
+library(xtable)
+knitr::opts_knit$set(root.dir = "../Title_1_simulation/Exported_Results_v1121-2022/")
+#setwd()
+```
+
+
+
+```{r results=F,warning=F,message=F}
+count = as.numeric(read_csv('./H/count.csv',col_names = F)$X1)
+V = as.numeric(read_csv('./H/V.csv',col_names = F)$X1)
+B_hat_i_H = as.numeric(read_csv('./H/B_hat_i.csv',col_names = F)$X1)
+B_hat_H = as.numeric(read_csv('./H/B_hat_H.csv',col_names = F)$X1)
+JSU_shrunk_counts_H = as.numeric(read_csv('./H/H_shrunk_counts.csv',col_names = F)$X1)
+
+beta_hat_0 = as.numeric(read_csv('./H/beta_hat_0.csv',col_names = F)$X1)
+A_hat = as.numeric(read_csv('./H/A_hat.csv',col_names = F)$X1)
+V_H = as.numeric(read_csv('./H/V_H.csv',col_names = F)$X1)
+
+#setwd('../Gaussian/')
+df_allocation = as.numeric(read_csv('./Gaussian/Gaussian_allocation.csv',col_names = F))
+df_allocations = (read_csv('./Gaussian/Gaussian_allocations.csv',col_names = F))
+df_allocations_dp = (read_csv('./Gaussian/Gaussian_allocations_dp.csv',col_names = F))
+
+
+#setwd('../HB/')
+B_hat_i_HB = as.numeric(read_csv('./HB/B_hat_i_HB.csv',col_names = F)$X1)
+HB_shrunk_count = (read_csv('./HB/HB_shrunk_count.csv',col_names = F)$X1)
+HB_allocation = as.numeric(read_csv('./HB/HB_allocation.csv',col_names = F))
+HB_shrunk_allocations = (read_csv('./HB/HB_shrunk_allocations.csv',col_names = F))
+HB_shrunk_allocations_dp = (read_csv('./HB/HB_allocations_dp.csv',col_names = F))
+
+
+#setwd('../H_Prop/')
+pop_total = as.numeric(read_csv('./H_Prop/pop_total.csv',col_names = F)$X1)
+beta_hat_0_prop = as.numeric(read_csv('./H_Prop/beta_hat_0_Prop.csv',col_names = F)$X1)
+B_hat_i_H_prop = as.numeric(read_csv('./H_Prop/B_hat_i_H_Prop.csv',col_names = F)$X1)
+H_prop_allocation = as.numeric(read_csv('./H_Prop/H_prop_allocation.csv',col_names = F))
+H_prop_shrunk_allocations = (read_csv('./H_Prop/H_prop_shrunk_allocations.csv',col_names = F))
+JSU_shrunk_counts_H_prop = as.numeric(read_csv('./H_Prop/JS_shrunk_counts_Prop.csv',col_names = F)$X1)
+Prop = as.numeric(read_csv('./H_Prop/Prop.csv',col_names = F)$X1)
+Shrunk_Prop = as.numeric(read_csv('./H_Prop/Shrunk_Prop.csv',col_names = F)$X1)
+V_Prop = as.numeric(read_csv('./H_Prop/V.csv',col_names = F)$X1)
+#pop_total = as.numeric(read_csv('pop_total.csv',col_names = F)$X1)
+H_prop_shrunk_allocations_dp = (read_csv('./H_Prop/H_prop_shrunk_allocations_dp.csv',col_names = F))
+
+#setwd('../H_reg/')
+B_hat_i_H_reg = as.numeric(read_csv('./H_reg/B_hat_i.csv',col_names = F))
+beta_hat_0_reg = as.numeric(read_csv('./H_reg/beta_hat_0_reg.csv',col_names = F))
+H_reg_shrunk_count = as.numeric(read_csv('./H_reg/H_reg_shrunk_count.csv',col_names = F)$X1)
+H_reg_allocation = as.numeric(read_csv('./H_reg/H_reg_allocation.csv',col_names = F))
+H_reg_allocations = (read_csv('./H_reg/H_reg_allocations.csv',col_names = F))
+```
+
+
+# Shrinkage Population Assessment
+
+```{r}
+# L2 risk estimation function
+exp_l2 <- function(estimates,target){
+  sim_ <- apply(estimates, 1, function(x){
+    sqrt(sum((x - target)^2))
+  }) 
+  return(list(mean = mean(sim_), se = sqrt(var(sim_))))
+}
+```
+
+## generate EB synthetic draws
+
+```{r}
+n_sim = 10000
+poverty_count_dist_gaussian = matrix(rep(NA, n_sim * length(count)), ncol = length(count))
+poverty_count_dist_HB = matrix(rep(NA, n_sim * length(count)), ncol = length(count))
+poverty_count_dist_ML = matrix(rep(NA, n_sim * length(count)), ncol = length(count))
+#poverty_count_dist_H_reg = matrix(rep(NA, n_sim * length(count)), ncol = length(count))
+
+mean_HB = (1-B_hat_i_HB)*count + B_hat_i_HB*beta_hat_0
+sd_HB =  sqrt(V*(1-B_hat_i_HB))
+mean_ML = (1- B_hat_i_H_prop)*Prop + B_hat_i_H_prop*beta_hat_0_prop
+sd_ML = sqrt(V_Prop*(1-B_hat_i_H_prop))
+
+for(i in 1:n_sim){
+  poverty_count_dist_gaussian[i,] = rnorm(length(count), mean = count ,sd = sqrt(V))
+}
+for(i in 1:n_sim){
+  poverty_count_dist_HB[i,] = rnorm(length(count), mean = mean_HB, sd = sd_HB)
+}
+for(i in 1:n_sim){
+  poverty_count_dist_ML[i,] = pmax(pop_total,1)*rnorm(length(count), mean = mean_ML, sd = sd_ML)
+}
+#for(i in 1:n_sim){
+#  poverty_count_dist_H_reg[i,] = rnorm(length(count), mean = (1-B_hat_i_H_reg)*count + B_hat_i_H_reg * beta_hat_0_reg ,sd =  sqrt( V #*(1-B_hat_i_H_reg) ))
+#} 
+```
+
+
+## SAIPE (raw)
+
+Original, log, proportion;
+
+```{r}
+hist(count,main = 'Distribution of Poverty Counts',breaks = 100)
+hist(log(count),main = 'Log Poverty Counts', breaks = 100)
+hist(count/(pop_total), xlim=c(0, 0.2), xlab = 'Children in need/Total Pop in that district', breaks = 1000)
+```
+
+Estimated L2 risk:
+
+```{r}
+exp_l2(estimates = poverty_count_dist_gaussian, target = count)
+```
+
+## HB
+
+```{r}
+hist(HB_shrunk_count,main = 'Distribution of Poverty Counts',breaks = 100)
+hist(log(HB_shrunk_count),main = 'Log Poverty Counts (HB)', xlim = c(0,12),breaks = 100)
+hist(HB_shrunk_count/(pop_total), xlim = c(0, 0.2), xlab = 'Children in need/Total Pop in that district',breaks = 10000)
+```
+
+```{r}
+set.seed(82734)
+nsim = dim(poverty_count_dist_HB)[1]
+plot.data = as.data.frame(t(log(pmax(poverty_count_dist_HB[sample(1:nsim, size = 50), ], 1))))  %>% pivot_longer(everything())
+#head(plot.data)
+log_population_HB <- ggplot(plot.data, aes(x = value, color = name)) +
+  geom_density(fill = NA) + 
+  scale_color_discrete(guide = 'none')
+log_population_HB
+```
+
+
+Estimated risk:
+
+```{r}
+exp_l2(estimates = poverty_count_dist_HB, target = count)
+```
+
+## ML - proportion
+
+
+Estimated risk:
+
+```{r}
+exp_l2(estimates = poverty_count_dist_ML, target = count)
+```
+
+
+```{r}
+set.seed(82734)
+nsim = dim(poverty_count_dist_ML)[1]
+plot.data = as.data.frame(t(log(pmax(poverty_count_dist_ML[sample(1:nsim, size = 50), ], 1))))  %>% pivot_longer(everything())
+head(plot.data)
+log_population_ML <- ggplot(plot.data, aes(x = value, color = name)) +
+  geom_density(fill = NA) + 
+  scale_color_discrete(guide = 'none')
+log_population_ML
+```
+
+
+# Comparison b/w estimates
+
+```{r}
+pop_estimates <- data.frame(saipe = log(pmax(count, 1), base = 10), 
+                            hb = log(pmax(mean_HB, 1), base = 10),
+                            ml = log(pmax(pop_total, 1)*mean_ML, base = 10))
+
+
+lim.lower.hb = range(pop_estimates %>% select(-"ml"))[1]
+lim.upper.hb = range(pop_estimates %>% select(-"ml"))[2]
+lim.lower.ml = range(pop_estimates %>% select(-"hb"))[1]
+lim.upper.ml = range(pop_estimates %>% select(-"hb"))[2]
+
+qqplot_pop_hb <- ggplot(aes(x = saipe, y = hb), data = pop_estimates) +
+  geom_point(size = 0.2)+
+  labs(x = expression(SAIPE~poverty~estimates~(log[10])), 
+       y = expression(Expected~Hudson-Berger~poverty~estimates~(log[10])))+
+  geom_abline(slope = 1,col = 'red', size = 1) +
+  xlim(lim.lower.hb, lim.upper.hb) + ylim(lim.lower.hb, lim.upper.hb)  +
+  theme_bw()
+
+qqplot_pop_ml <- ggplot(aes(x = saipe, y = ml), data = pop_estimates) +
+ geom_point(size = 0.2)+
+ labs(x = expression(SAIPE~poverty~estimates~(log[10])), 
+      y = expression(Expected~Morris-Lysy~poverty~estimates~(log[10])))+
+  geom_abline(slope = 1,col = 'red', size = 1) +
+  xlim(lim.lower.ml, lim.upper.ml) + ylim(lim.lower.ml, lim.upper.ml)  +
+  theme_bw()
+```
+
+```{r pop_hb}
+qqplot_pop_hb
+svg('pop_hb.svg', width = 4, height = 4)
+print(qqplot_pop_hb)
+dev.off()
+```
+
+
+```{r pop_ml}
+qqplot_pop_ml
+svg('pop_ml.svg', width = 4, height = 4)
+print(qqplot_pop_ml)
+dev.off()
+```
+
+# Comparison - boxplots of estimates
+
+```{r}
+plot(log(Prop), log(pop_total+1))
+summary(pop_total)
+
+Prop[order(pop_total)[1:100]]
+sort(pop_total)[1:100]
+quantile(pop_total,probs = seq(0, 1, by = 0.005))
+length(pop_total)
+
+
+index <- order(pop_total)[round(c(0.01, 0.05, 0.5, 1)*length(pop_total))]
+pop_subset <- pop_total[index]
+prop_subset <- Prop[index]
+plotn <- length(index)
+
+poverty_reference <- data.frame(poverty = prop_subset*pop_subset, name=paste0(rep('V', plotn), 1:plotn))
+pop_replicates <- rbind(
+  cbind(as.data.frame(poverty_count_dist_gaussian[, index], colnames = 1:plotn), method = 'Steed et al.'),
+  cbind(as.data.frame(poverty_count_dist_HB[, index], colnames = 1:plotn),  method =  'Hudson-Berger'),
+  cbind(as.data.frame(poverty_count_dist_ML[, index], colnames = 1:plotn),  method = 'Morris-Lysy')) %>% pivot_longer(cols = starts_with("V"))
+
+labeller_names <- list(
+  'V1'=paste('total pop.', pop_subset[1]),
+  'V2'=paste('total pop.', pop_subset[2]),
+  'V3'=paste('total pop.', pop_subset[3]),
+  'V4'=paste('total pop.', pop_subset[4])
+)
+
+boxplot_labeller <- function(variable,value){
+  return(labeller_names[value])
+}
+
+boxplot_replicates <- ggplot(data = pop_replicates, aes(y = value, color = method)) +
+  geom_boxplot() + facet_wrap(.~name, scales = "free_y", ncol = 4, labeller = boxplot_labeller) +
+  geom_hline(data = poverty_reference, aes(yintercept = poverty), linetype = 'dashed') +
+  theme_bw() + labs(x = '', y = expression(poverty~estimates~(10^4~replicates))) +
+  theme(axis.text.x=element_blank())
+```
+
+
+
+```{r boxplot_replicates}
+boxplot_replicates
+svg('boxplot_replicates.svg', width = 10, height = 3)
+print(boxplot_replicates)
+dev.off()
+```
+
+# Expected Total Entitlement Loss
+
+```{r}
+total_entitlement_loss <- function(sims, allocation = df_allocation){
+  truth_mat = matrix(rep(as.matrix(allocation), dim(sims)[1]),
+                     nrow = dim(sims)[1], byrow = T)
+  diff = as.matrix(truth_mat - sims)
+  diff[diff < 0] = 0
+  total_ = apply(diff,1,sum)
+  return(total_)
+}
+
+mv.b <- function(x){
+  return(data.frame(mean = mean(x/10^9), sd = sqrt(var(x/10^9))))
+}
+
+
+total_entitlement_loss_gaussian <- total_entitlement_loss(df_allocations)
+total_entitlement_loss_gaussian_dp <- total_entitlement_loss(df_allocations_dp)
+total_entitlement_loss_HB <- total_entitlement_loss(HB_shrunk_allocations)
+total_entitlement_loss_HB_dp <- total_entitlement_loss(HB_shrunk_allocations_dp)
+total_entitlement_loss_MLp <- total_entitlement_loss(H_prop_shrunk_allocations)
+total_entitlement_loss_MLp_dp <- total_entitlement_loss(H_prop_shrunk_allocations_dp)
+#total_entitlement_loss_MLr <- total_entitlement_loss(H_reg_allocations)
+#total_entitlement_loss_MLr <- total_entitlement_loss()
+
+print('The Total Expected Entitlement Loss and SD (Steed et al.) is (in $B):')
+mean(total_entitlement_loss_gaussian/10^9); sqrt(var(total_entitlement_loss_gaussian/10^9))
+#hist(total_entitlement_loss_gaussian/10^9)
+print('The Total Expected Entitlement Loss and SD from HB is  (in $B):')
+mean(total_entitlement_loss_HB/10^9); sqrt(var(total_entitlement_loss_HB/10^9))
+print('The Total Expected Entitlement Loss and SD from ML (proportion) is  (in $B):')
+mean(total_entitlement_loss_MLp/10^9); sqrt(var(total_entitlement_loss_MLp/10^9))
+#print('The Total Expected Entitlement Loss and SD from ML (regression) is  (in $B):')
+#mean(total_entitlement_loss_MLr/10^9); sqrt(var(total_entitlement_loss_MLr/10^9))
+
+mv.b(total_entitlement_loss_gaussian_dp)
+mv.b(total_entitlement_loss_HB_dp)
+mv.b(total_entitlement_loss_MLp_dp)
+
+
+
+print_table <- rbind(
+  cbind(mv.b(total_entitlement_loss_gaussian), mv.b(total_entitlement_loss_gaussian_dp)),
+  cbind(mv.b(total_entitlement_loss_HB), mv.b(total_entitlement_loss_HB_dp)),
+  cbind(mv.b(total_entitlement_loss_MLp), mv.b(total_entitlement_loss_MLp_dp))
+  ) %>% 
+  `colnames<-`(c('estimate', 'se', 'with_dp', 'se_dp')) %>%
+  `rownames<-`(c('Steed et al.', 'Hudson-Berger', 'Morris-Lysy')) %>%
+  mutate(diffpct = 100*(with_dp - estimate)/estimate)
+
+xtable(print_table,digits = 3)
+
+
+```
+
+
+```{r, eval = F}
+H_prop_shrunk_allocations = (read_csv('./H_Prop/H_prop_shrunk_allocations.csv',col_names = F))
+H_reg_allocations = (read_csv('./H_reg/H_reg_allocations.csv',col_names = F))
+sum(abs(H_prop_shrunk_allocations - H_reg_allocations))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
