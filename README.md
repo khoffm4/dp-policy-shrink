@@ -14,21 +14,21 @@ For more, check out the [paper](https://rbsteed.com/referral/dp-policy) and [SI]
 
 To install, follow the same installation instructions as found on ryansteed/dp-policy [https://github.com/ryansteed/dp-policy]
 
-##What's New
-
 
 ## To Run
 
 To perform the allocation estimates with shrinkage, open "notebooks/Shrunk_Titlei.ipynb" and run the file. This will populate the following folders:
 
-notebooks/Gaussian (Gaussian Error Scheme)
-notebooks/H_Prop (Morris-Lysy)
-notebooks/HB (Hudson-Berger Shrinkage Scheme)
+- notebooks/Gaussian (Gaussian Error Scheme)  
+- notebooks/H_Prop (Morris-Lysy)
+- notebooks/HB (Hudson-Berger Shrinkage Scheme)
 
 Each folder will contain files:
 
-(Shrinkage Scheme)_allocations.csv 
-(Shrinkage Sccheme)_allocations_dp.csv 
+- (Shrinkage Scheme)_allocations.csv 
+- (Shrinkage Sccheme)_allocations_dp.csv 
 
 (Shrinkage Scheme)_allocations.csv represents a matrix where the entires are the estimated Title i allocations that were performed if one shrunk the population counts and allocated based on those shrunk counts. (Shrinkage Sccheme)_allocations_dp.csv is similar however it estimates the Title i allocations if one shrunk the population counts, added gaussian differnetial privacy noise and allocated based on the result. 
+
+An RMarkdown file analyzing these files can be found in notebooks/JS_Compairson.Rmd.
 
